@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Time Tracker</title>
+
+	<style>
+        body, html {
+            background-color: #fafafa;
+            height: 100%;
+        }
+		.timer {
+			display: flex;
+			padding: 1em;
+			font-size: 1.3em;
+			border-bottom: 1px solid #eee;
+            background-color: white;
+		}
+        .timer.active {
+            background-color: hsl(171, 100%, 41%);
+            color: white;
+        }
+        .icon {
+            color: rgba(0,0,0,.35);
+            transition: color 75ms linear;
+        }
+		.col {
+			flex: 1 1 auto;
+		}
+		.control {
+			flex-grow: 0;
+			flex-basis: 6em;
+			text-align: center;
+		}
+		.control a {
+			width: 100%;
+			text-align: center;
+			display: block;
+		}
+        .col p a {
+            vertical-align: middle;
+        }
+	</style>
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
+
+	<!-- Load Vue before markup is rendered -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+	<div id="app">
+		<timer v-for="(timer, index) in timers"
+			   :data="timer"
+               :index="index"
+               @remove="removeTimer"
+               @update="updateTimer">
+		</timer>
+
+        <section class="section">
+            <div class="container has-text-centered">
+                <button type="button" class="button is-secondary is-medium" @click="addTimer">Add a timer</button>
+            </div>
+        </section>
+	</div>
+
+	<script id="template-timer" type="text/template">
+		<div :class="timerClass">
+			<div class="col control">
+				<a href="#" class="icon" @click.prevent="toggle">
+					<i :class="iconClass"></i>
+				</a>
+			</div>
+			<div class="col time">{{ timeString }}</div>
+			<div class="col task">
+                <p v-if="!editing">{{ text }}</p>
+                <input v-else class="input" type="text" v-model="editText" autofocus placeholder="Enter a task name">
+            </div>
+			<div class="col has-text-right">
+				<p v-if="!editing">
+                    <a href="#" @click.prevent="toggleEdit" class="icon"><i class="fas fa-edit fa-md"></i></a>
+                    <a href="#" class="delete is-medium" @click.prevent="remove"></a>
+                </p>
+                <p v-else>
+                    <a href="#" class="button is-info" @click.prevent="saveEdit">Save</a>
+                    <a href="#" class="button is-text" @click.prevent="toggleEdit">Cancel</a>
+                </p>
+			</div>
+		</div>
+	</script>
+
+	<script src="https://momentjs.com/downloads/moment.js"></script>
+
+	<script>
+		Vue.component('timer', {
+			props: ['index', 'data'],
+
+			data() {
+				return {
+					active: this.data.active,
+					text: this.data.text,
+					startTime: this.data.start ? moment(this.data.start) : null,
+					seconds: this.data.seconds,
+					minutes: this.data.minutes,
+					hours: this.data.hours,
+					editing: this.data.editing,
+					interval: null,
+                    editText: null
+				}
+			},
+
+			template: document.querySelector('#template-timer').innerHTML,
+
+			computed: {
+			    timerClass() {
+			        return 'timer ' + (this.active ? 'active' : '');
+                },
+
+				iconClass() {
+					return 'fas fa-2x fa-' + (this.active ? 'pause' : 'play')
+				},
+
+				timeString() {
+					return this.format(this.hours) + ':' + this.format(this.minutes) + ':' + this.format(this.seconds);
+				}
+			},
+
+			methods: {
+				toggle() {
+					if (this.active) {
+						this.stop();
+					} else {
+						this.startTimer();
+					}
+
+                    this.update();
+				},
+
+				startTimer() {
+				    this.active = true;
+                    this.startTime = moment();
+					this.interval = window.setInterval(this.increment, 1000);
+				},
+
+                stop() {
+				    window.clearInterval(this.interval);
+				    this.startTime = null;
+				    this.interval = null;
+				    this.active = false;
+                },
+
+				increment() {
+					this.seconds++;
+
+					if (this.seconds >= 60) {
+						this.seconds = 0;
+						this.minutes++;
+					}
+
+					if (this.minutes >= 60) {
+						this.minutes = 0;
+						this.hours++;
+					}
+				},
+
+				format(value) {
+					return ('0' + value).slice(-2);
+				},
+
+                remove() {
+				    if (window.confirm('Remove this timer?')) {
+				        this.$emit('remove', this.index);
+                    }
+                },
+
+                update() {
+				    let timer = new Timer();
+
+				    timer.active = this.active;
+				    timer.hours = this.hours;
+				    timer.minutes = this.minutes;
+				    timer.seconds = this.seconds;
+				    timer.startTime = this.startTime;
+				    timer.text = this.text;
+
+                    this.$emit('update', this.index, timer);
+                },
+
+                toggleEdit() {
+				    this.stop();
+                    this.editText = this.text;
+				    this.editing = !this.editing;
+				    this.update();
+                },
+
+                saveEdit() {
+				    this.text = this.editText;
+				    this.editing = false;
+				    this.update();
+                }
+			}
+		});
+
+		new Vue({
+			el: '#app',
+
+			data: {
+				timers: JSON.parse(window.localStorage.timers) || []
+			},
+
+            methods: {
+			    addTimer() {
+			        const timer = new Timer();
+			        timer.editing = true;
+			        this.timers.push(timer);
+			        this.save();
+                },
+
+                save() {
+			        window.localStorage.timers = JSON.stringify(this.timers);
+                },
+
+                updateTimer(index, timer) {
+			        this.timers[index] = timer;
+			        this.save();
+                },
+
+                removeTimer(index) {
+			        this.timers.splice(index, 1);
+			        this.save();
+                }
+            }
+		});
+
+		class Timer {
+		    constructor(text) {
+		        this.active = false;
+		        this.editing = false;
+		        this.startTime = null;
+		        this.text = text || null;
+		        this.seconds = this.minutes = this.hours = 0;
+            }
+        }
+	</script>
+
+</body>
+</html>
