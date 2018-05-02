@@ -152,6 +152,21 @@
     <script src="https://momentjs.com/downloads/moment.js"></script>
 
     <script>
+        class Timer {
+            constructor(text) {
+                this.active = false;
+                this.editing = false;
+                this.text = text || null;
+                this.seconds = this.minutes = this.hours = 0;
+                this.startHours = this.startMinutes = this.startSeconds = 0;
+                this.start = {
+                    time: null,
+                    hours: 0,
+                    minutes: 0,
+                    seconds: 0
+                };
+            }
+        }
         Vue.component('timer', {
             props: ['index', 'data'],
 
@@ -160,14 +175,19 @@
                     new: this.data.new || false,
                     active: this.data.active,
                     text: this.data.text,
-                    startTime: this.data.start ? moment(this.data.start) : null,
                     seconds: this.data.seconds,
                     minutes: this.data.minutes,
                     hours: this.data.hours,
                     editing: this.data.editing,
                     autofocused: true,
                     interval: null,
-                    edit: { hours: '00', minutes: '00', seconds: '00', text: null }
+                    edit: { hours: '00', minutes: '00', seconds: '00', text: null },
+                    start: {
+                        hours: this.data.start.hours,
+                        minutes: this.data.start.minutes,
+                        seconds: this.data.start.seconds,
+                        time: this.data.start.time ? moment(this.data.start.time) : null
+                    }
                 }
             },
 
@@ -194,6 +214,11 @@
                     if (this.active) {
                         this.stop();
                     } else {
+                        this.active = true;
+                        this.start.time = moment();
+                        this.start.hours = this.hours;
+                        this.start.minutes = this.minutes;
+                        this.start.seconds = this.seconds;
                         this.startTimer();
                     }
 
@@ -201,15 +226,13 @@
                 },
 
                 startTimer() {
-                    this.active = true;
-                    this.startTime = moment();
                     this.interval = window.setInterval(this.increment, 1000);
-                    this.update();
                 },
 
                 stop() {
                     window.clearInterval(this.interval);
-                    this.startTime = null;
+                    this.start.time = null;
+                    this.start.hours = this.start.minutes = this.start.seconds = 0;
                     this.interval = null;
                     this.active = false;
                     this.update();
@@ -246,7 +269,7 @@
                     timer.hours = this.hours;
                     timer.minutes = this.minutes;
                     timer.seconds = this.seconds;
-                    timer.startTime = this.startTime;
+                    timer.start = this.start;
                     timer.text = this.text;
 
                     this.$emit('update', this.index, timer);
@@ -317,6 +340,18 @@
                     this.stop();
                     this.hours = this.minutes = this.seconds = 0;
                     this.update();
+                },
+
+                sync() {
+                    if (!this.active || !this.start.time) return;
+
+                    const duration = moment.duration(
+                        (moment()).diff(this.start.time)
+                    );
+
+                    this.hours = duration.add(this.start.hours, 'hours').hours();
+                    this.minutes = duration.add(this.start.minutes, 'minutes').minutes();
+                    this.seconds = duration.add(this.start.seconds, 'seconds').seconds();
                 }
             },
 
@@ -327,6 +362,16 @@
 
                 $autofocus.focus();
                 this.autofocused = true;
+            },
+
+            created() {
+                window.addEventListener('focus', () => this.sync());
+
+                this.sync();
+
+                if (this.active) {
+                    this.startTimer();
+                }
             }
         });
 
@@ -369,16 +414,6 @@
                 elements[elements.length - 1].focus();
             }
         });
-
-        class Timer {
-            constructor(text) {
-                this.active = false;
-                this.editing = false;
-                this.startTime = null;
-                this.text = text || null;
-                this.seconds = this.minutes = this.hours = 0;
-            }
-        }
     </script>
 
 </body>
