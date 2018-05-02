@@ -156,6 +156,7 @@
 				    this.active = true;
                     this.startTime = moment();
 					this.interval = window.setInterval(this.increment, 1000);
+                    this.update();
 				},
 
                 stop() {
@@ -163,6 +164,7 @@
 				    this.startTime = null;
 				    this.interval = null;
 				    this.active = false;
+				    this.update();
                 },
 
 				increment() {
@@ -203,10 +205,12 @@
                 },
 
                 toggleEdit() {
-				    this.stop();
+                    this.editing = !this.editing;
+
+                    if (!this.editing) return;
+
                     this.editText = this.text;
-				    this.editing = !this.editing;
-				    this.update();
+                    this.stop();
                 },
 
                 saveEdit() {
