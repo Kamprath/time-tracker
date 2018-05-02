@@ -137,8 +137,9 @@
             </div>
             <div class="col has-text-right">
                 <p v-if="!editing">
-                    <a @click="toggleEdit" class="icon"><i class="fas fa-edit fa-md"></i></a>
-                    <a class="delete is-medium" @click="remove"></a>
+                    <a @click="reset" class="icon" title="Reset"><i class="fas fa-redo-alt"></i></a>
+                    <a @click="toggleEdit" class="icon" title="Edit"><i class="fas fa-edit fa-md"></i></a>
+                    <a class="delete is-medium" @click="remove" title="Remove"></a>
                 </p>
                 <p v-else>
                     <a class="button is-primary" @click="saveEdit">Save</a>
@@ -310,6 +311,12 @@
                     return this.format(
                         value > limit ? limit : value
                     );
+                },
+
+                reset() {
+                    this.stop();
+                    this.hours = this.minutes = this.seconds = 0;
+                    this.update();
                 }
             },
 
