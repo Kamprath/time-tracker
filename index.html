@@ -28,16 +28,33 @@
 		}
 		.control {
 			flex-grow: 0;
-			flex-basis: 6em;
+			flex-basis: 3em;
 			text-align: center;
 		}
 		.control a {
 			width: 100%;
-			text-align: center;
+			text-align: right;
 			display: block;
 		}
         .col p a {
             vertical-align: middle;
+        }
+        .task {
+            font-size: .85em;
+        }
+        .task p {
+            display: inline;
+            vertical-align: middle;
+        }
+		.time {
+			flex-basis: 9em;
+			flex-grow: 0;
+			text-align: center;
+            font-weight: 600;
+            color: hsl(171, 100%, 41%);
+		}
+        .active .time {
+            color: white;
         }
 	</style>
 
@@ -58,7 +75,7 @@
 
         <section class="section">
             <div class="container has-text-centered">
-                <button type="button" class="button is-secondary is-medium" @click="addTimer">Add a timer</button>
+                <button type="button" class="button is-primary is-outlined is-medium" @click="addTimer">Add a timer</button>
             </div>
         </section>
 	</div>
@@ -81,7 +98,7 @@
                     <a href="#" class="delete is-medium" @click.prevent="remove"></a>
                 </p>
                 <p v-else>
-                    <a href="#" class="button is-info" @click.prevent="saveEdit">Save</a>
+                    <a href="#" class="button is-primary" @click.prevent="saveEdit">Save</a>
                     <a href="#" class="button is-text" @click.prevent="toggleEdit">Cancel</a>
                 </p>
 			</div>
@@ -204,7 +221,7 @@
 			el: '#app',
 
 			data: {
-				timers: JSON.parse(window.localStorage.timers) || []
+				timers: JSON.parse(window.localStorage.timers || '[]')
 			},
 
             methods: {
