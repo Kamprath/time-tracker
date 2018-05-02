@@ -90,7 +90,14 @@
 			<div class="col time">{{ timeString }}</div>
 			<div class="col task">
                 <p v-if="!editing">{{ text }}</p>
-                <input v-else class="input" type="text" v-model="editText" autofocus placeholder="Enter a task name">
+                <input v-else
+					   class="input"
+					   type="text"
+					   v-model="editText"
+					   @keyup.enter="saveEdit"
+					   @keyup.esc="toggleEdit"
+					   autofocus
+					   placeholder="Enter a task name">
             </div>
 			<div class="col has-text-right">
 				<p v-if="!editing">
@@ -218,6 +225,14 @@
 				    this.editing = false;
 				    this.update();
                 }
+			},
+
+			updated() {
+			    const $autofocus = this.$el.querySelector('[autofocus]');
+
+			    if (!$autofocus) return;
+
+			    $autofocus.focus();
 			}
 		});
 
@@ -249,7 +264,15 @@
 			        this.timers.splice(index, 1);
 			        this.save();
                 }
-            }
+            },
+
+			updated() {
+                const elements = document.querySelectorAll('[autofocus]');
+
+                if (!elements.length) return;
+
+                elements[elements.length - 1].focus();
+			}
 		});
 
 		class Timer {
