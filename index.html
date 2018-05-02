@@ -94,7 +94,7 @@
     <script id="template-timer" type="text/template">
         <div :class="timerClass">
             <div class="col control">
-                <a href="#" class="icon" @click.prevent="toggle">
+                <a class="icon" @click="toggle">
                     <i :class="iconClass"></i>
                 </a>
             </div>
@@ -137,12 +137,12 @@
             </div>
             <div class="col has-text-right">
                 <p v-if="!editing">
-                    <a href="#" @click.prevent="toggleEdit" class="icon"><i class="fas fa-edit fa-md"></i></a>
-                    <a href="#" class="delete is-medium" @click.prevent="remove"></a>
+                    <a @click="toggleEdit" class="icon"><i class="fas fa-edit fa-md"></i></a>
+                    <a class="delete is-medium" @click="remove"></a>
                 </p>
                 <p v-else>
-                    <a href="#" class="button is-primary" @click.prevent="saveEdit">Save</a>
-                    <a href="#" class="button is-text" @click.prevent="toggleEdit">Cancel</a>
+                    <a class="button is-primary" @click="saveEdit">Save</a>
+                    <a class="button is-text" @click="toggleEdit">Cancel</a>
                 </p>
             </div>
         </div>
