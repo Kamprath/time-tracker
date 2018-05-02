@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Time Tracker</title>
+    <title>Time Tracker</title>
 
-	<style>
+    <style>
         body, html {
             background-color: #fafafa;
             height: 100%;
         }
-		.timer {
-			display: flex;
-			padding: 1em;
-			font-size: 1.3em;
-			border-bottom: 1px solid #eee;
+        .timer {
+            display: flex;
+            padding: 1em;
+            font-size: 1.3em;
+            border-bottom: 1px solid #eee;
             background-color: white;
-		}
+        }
         .timer.active {
             background-color: hsl(171, 100%, 41%);
             color: white;
@@ -23,19 +23,23 @@
             color: rgba(0,0,0,.35);
             transition: color 75ms linear;
         }
-		.col {
-			flex: 1 1 auto;
-		}
-		.control {
-			flex-grow: 0;
-			flex-basis: 3em;
-			text-align: center;
-		}
-		.control a {
-			width: 100%;
-			text-align: right;
-			display: block;
-		}
+        .col {
+            flex: 1 1 auto;
+        }
+        .control {
+            flex-grow: 0;
+            flex-basis: 3em;
+            text-align: center;
+        }
+        .control a {
+            width: 100%;
+            text-align: right;
+            display: block;
+        }
+        .editing .control a:hover {
+            cursor: not-allowed;
+            color: rgba(0,0,0,.35);
+        }
         .col p a {
             vertical-align: middle;
         }
@@ -45,62 +49,94 @@
         .task p {
             display: inline;
             vertical-align: middle;
+            line-height: 1.85em;
         }
-		.time {
-			flex-basis: 9em;
-			flex-grow: 0;
-			text-align: center;
+        .time {
+            flex-basis: 9em;
+            flex-grow: 0;
+            text-align: center;
             font-weight: 600;
             color: hsl(171, 100%, 41%);
-		}
+        }
         .active .time {
             color: white;
         }
-	</style>
+        .time .input {
+            display: inline;
+            width: 2em;
+            padding: 0;
+            text-align: center;
+        }
+    </style>
 
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
-	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.1/css/bulma.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
 
-	<!-- Load Vue before markup is rendered -->
-	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- Load Vue before markup is rendered -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
-	<div id="app">
-		<timer v-for="(timer, index) in timers"
-			   :data="timer"
+    <div id="app">
+        <timer v-for="(timer, index) in timers"
+               :data="timer"
                :index="index"
                @remove="removeTimer"
                @update="updateTimer">
-		</timer>
+        </timer>
 
         <section class="section">
             <div class="container has-text-centered">
                 <button type="button" class="button is-primary is-outlined is-medium" @click="addTimer">Add a timer</button>
             </div>
         </section>
-	</div>
+    </div>
 
-	<script id="template-timer" type="text/template">
-		<div :class="timerClass">
-			<div class="col control">
-				<a href="#" class="icon" @click.prevent="toggle">
-					<i :class="iconClass"></i>
-				</a>
-			</div>
-			<div class="col time">{{ timeString }}</div>
-			<div class="col task">
+    <script id="template-timer" type="text/template">
+        <div :class="timerClass">
+            <div class="col control">
+                <a href="#" class="icon" @click.prevent="toggle">
+                    <i :class="iconClass"></i>
+                </a>
+            </div>
+            <div class="col time">
+                <p v-if="!editing">{{ timeString }}</p>
+                <p v-else>
+                    <input type="text"
+                           v-model="edit.hours"
+                           class="input"
+                           @keydown="filterNumericKey"
+                           @keyup="filterHours"
+                           @keydown.enter="saveEdit"
+                           @keydown.esc="toggleEdit"> :
+                    <input type="text"
+                           v-model="edit.minutes"
+                           class="input"
+                           @keydown.enter="saveEdit"
+                           @keydown.esc="toggleEdit"
+                           @keydown="filterNumericKey"
+                           @keyup="filterMinutes"> :
+                    <input type="text"
+                           v-model="edit.seconds"
+                           class="input"
+                           @keydown.enter="saveEdit"
+                           @keydown.esc="toggleEdit"
+                           @keydown="filterNumericKey"
+                           @keyup="filterSeconds">
+                </p>
+            </div>
+            <div class="col task">
                 <p v-if="!editing">{{ text }}</p>
                 <input v-else
-					   class="input"
-					   type="text"
-					   v-model="editText"
-					   @keyup.enter="saveEdit"
-					   @keyup.esc="toggleEdit"
-					   autofocus
-					   placeholder="Enter a task name">
+                       class="input"
+                       type="text"
+                       v-model="edit.text"
+                       @keyup.enter="saveEdit"
+                       @keyup.esc="toggleEdit"
+                       autofocus
+                       placeholder="Enter a task name">
             </div>
-			<div class="col has-text-right">
-				<p v-if="!editing">
+            <div class="col has-text-right">
+                <p v-if="!editing">
                     <a href="#" @click.prevent="toggleEdit" class="icon"><i class="fas fa-edit fa-md"></i></a>
                     <a href="#" class="delete is-medium" @click.prevent="remove"></a>
                 </p>
@@ -108,183 +144,235 @@
                     <a href="#" class="button is-primary" @click.prevent="saveEdit">Save</a>
                     <a href="#" class="button is-text" @click.prevent="toggleEdit">Cancel</a>
                 </p>
-			</div>
-		</div>
-	</script>
+            </div>
+        </div>
+    </script>
 
-	<script src="https://momentjs.com/downloads/moment.js"></script>
+    <script src="https://momentjs.com/downloads/moment.js"></script>
 
-	<script>
-		Vue.component('timer', {
-			props: ['index', 'data'],
+    <script>
+        Vue.component('timer', {
+            props: ['index', 'data'],
 
-			data() {
-				return {
-					active: this.data.active,
-					text: this.data.text,
-					startTime: this.data.start ? moment(this.data.start) : null,
-					seconds: this.data.seconds,
-					minutes: this.data.minutes,
-					hours: this.data.hours,
-					editing: this.data.editing,
-					interval: null,
-                    editText: null
-				}
-			},
+            data() {
+                return {
+                    new: this.data.new || false,
+                    active: this.data.active,
+                    text: this.data.text,
+                    startTime: this.data.start ? moment(this.data.start) : null,
+                    seconds: this.data.seconds,
+                    minutes: this.data.minutes,
+                    hours: this.data.hours,
+                    editing: this.data.editing,
+                    autofocused: true,
+                    interval: null,
+                    edit: { hours: '00', minutes: '00', seconds: '00', text: null }
+                }
+            },
 
-			template: document.querySelector('#template-timer').innerHTML,
+            template: document.querySelector('#template-timer').innerHTML,
 
-			computed: {
-			    timerClass() {
-			        return 'timer ' + (this.active ? 'active' : '');
+            computed: {
+                timerClass() {
+                    return 'timer' + (this.active ? ' active' : '') + (this.editing ? ' editing' : '');
                 },
 
-				iconClass() {
-					return 'fas fa-2x fa-' + (this.active ? 'pause' : 'play')
-				},
+                iconClass() {
+                    return 'fas fa-2x fa-' + (this.active ? 'pause' : 'play')
+                },
 
-				timeString() {
-					return this.format(this.hours) + ':' + this.format(this.minutes) + ':' + this.format(this.seconds);
-				}
-			},
+                timeString() {
+                    return this.format(this.hours) + ':' + this.format(this.minutes) + ':' + this.format(this.seconds);
+                }
+            },
 
-			methods: {
-				toggle() {
-					if (this.active) {
-						this.stop();
-					} else {
-						this.startTimer();
-					}
+            methods: {
+                toggle() {
+                    if (this.editing) return;
+
+                    if (this.active) {
+                        this.stop();
+                    } else {
+                        this.startTimer();
+                    }
 
                     this.update();
-				},
+                },
 
-				startTimer() {
-				    this.active = true;
+                startTimer() {
+                    this.active = true;
                     this.startTime = moment();
-					this.interval = window.setInterval(this.increment, 1000);
+                    this.interval = window.setInterval(this.increment, 1000);
                     this.update();
-				},
+                },
 
                 stop() {
-				    window.clearInterval(this.interval);
-				    this.startTime = null;
-				    this.interval = null;
-				    this.active = false;
-				    this.update();
+                    window.clearInterval(this.interval);
+                    this.startTime = null;
+                    this.interval = null;
+                    this.active = false;
+                    this.update();
                 },
 
-				increment() {
-					this.seconds++;
+                increment() {
+                    this.seconds++;
 
-					if (this.seconds >= 60) {
-						this.seconds = 0;
-						this.minutes++;
-					}
+                    if (this.seconds >= 60) {
+                        this.seconds = 0;
+                        this.minutes++;
+                    }
 
-					if (this.minutes >= 60) {
-						this.minutes = 0;
-						this.hours++;
-					}
-				},
+                    if (this.minutes >= 60) {
+                        this.minutes = 0;
+                        this.hours++;
+                    }
+                },
 
-				format(value) {
-					return ('0' + value).slice(-2);
-				},
+                format(value) {
+                    return ('0' + value).slice(-2);
+                },
 
-                remove() {
-				    if (window.confirm('Remove this timer?')) {
-				        this.$emit('remove', this.index);
+                remove(confirm = true) {
+                    if (!confirm || window.confirm('Remove this timer?')) {
+                        this.$emit('remove', this.index);
                     }
                 },
 
                 update() {
-				    let timer = new Timer();
+                    let timer = new Timer();
 
-				    timer.active = this.active;
-				    timer.hours = this.hours;
-				    timer.minutes = this.minutes;
-				    timer.seconds = this.seconds;
-				    timer.startTime = this.startTime;
-				    timer.text = this.text;
+                    timer.active = this.active;
+                    timer.hours = this.hours;
+                    timer.minutes = this.minutes;
+                    timer.seconds = this.seconds;
+                    timer.startTime = this.startTime;
+                    timer.text = this.text;
 
                     this.$emit('update', this.index, timer);
                 },
 
                 toggleEdit() {
+                    if (this.new) return this.remove(false);
+
+                    this.autofocused = false;
                     this.editing = !this.editing;
+
+                    this.update();
 
                     if (!this.editing) return;
 
-                    this.editText = this.text;
                     this.stop();
+
+                    this.edit.text = this.text;
+                    this.edit.hours = this.format(this.hours);
+                    this.edit.minutes = this.format(this.minutes);
+                    this.edit.seconds = this.format(this.seconds);
                 },
 
                 saveEdit() {
-				    this.text = this.editText;
-				    this.editing = false;
-				    this.update();
-                }
-			},
+                    this.new = false;
+                    this.text = this.edit.text;
+                    this.hours = Number.parseInt(this.edit.hours);
+                    this.minutes = Number.parseInt(this.edit.minutes);
+                    this.seconds = Number.parseInt(this.edit.seconds);
 
-			updated() {
-			    const $autofocus = this.$el.querySelector('[autofocus]');
-
-			    if (!$autofocus) return;
-
-			    $autofocus.focus();
-			}
-		});
-
-		new Vue({
-			el: '#app',
-
-			data: {
-				timers: JSON.parse(window.localStorage.timers || '[]')
-			},
-
-            methods: {
-			    addTimer() {
-			        const timer = new Timer();
-			        timer.editing = true;
-			        this.timers.push(timer);
-			        this.save();
+                    this.toggleEdit();
                 },
 
-                save() {
-			        window.localStorage.timers = JSON.stringify(this.timers);
+                /**
+                 * Stop event when a non-numeric key is pressed (excludes esc, space, etc.)
+                 * @param {Event} e
+                 */
+                filterNumericKey(e) {
+                    let keyCode = e.keyCode || e.which;
+                    if (keyCode >= 96 && keyCode <= 105) keyCode -= 48;
+                    const char = String.fromCharCode(keyCode);
+                    const validKeys = [8, 27, 37, 38, 39, 40];
+
+                    if ((isNaN(char - 0) && validKeys.indexOf(keyCode) < 0) || keyCode === 32) e.preventDefault();
                 },
 
-                updateTimer(index, timer) {
-			        this.timers[index] = timer;
-			        this.save();
+                filterHours(e) {
+                    this.edit.hours = this.filterTimeInput(e, 99);
                 },
 
-                removeTimer(index) {
-			        this.timers.splice(index, 1);
-			        this.save();
+                filterMinutes(e) {
+                    this.edit.minutes = this.filterTimeInput(e);
+                },
+
+                filterSeconds(e) {
+                    this.edit.seconds = this.filterTimeInput(e);
+                },
+
+                filterTimeInput(e, limit = 59) {
+                    const value = Number.parseInt(e.target.value) || 0;
+
+                    return this.format(
+                        value > limit ? limit : value
+                    );
                 }
             },
 
-			updated() {
+            updated() {
+                const $autofocus = this.$el.querySelector('[autofocus]');
+
+                if (!$autofocus || this.autofocused) return;
+
+                $autofocus.focus();
+                this.autofocused = true;
+            }
+        });
+
+        new Vue({
+            el: '#app',
+
+            data: {
+                timers: JSON.parse(window.localStorage.timers || '[]')
+            },
+
+            methods: {
+                addTimer() {
+                    const timer = new Timer();
+                    timer.editing = true;
+                    timer.new = true;
+                    this.timers.push(timer);
+                    this.save();
+                },
+
+                save() {
+                    window.localStorage.timers = JSON.stringify(this.timers);
+                },
+
+                updateTimer(index, timer) {
+                    this.timers[index] = timer;
+                    this.save();
+                },
+
+                removeTimer(index) {
+                    this.timers.splice(index, 1);
+                    this.save();
+                }
+            },
+
+            updated() {
                 const elements = document.querySelectorAll('[autofocus]');
 
                 if (!elements.length) return;
 
                 elements[elements.length - 1].focus();
-			}
-		});
+            }
+        });
 
-		class Timer {
-		    constructor(text) {
-		        this.active = false;
-		        this.editing = false;
-		        this.startTime = null;
-		        this.text = text || null;
-		        this.seconds = this.minutes = this.hours = 0;
+        class Timer {
+            constructor(text) {
+                this.active = false;
+                this.editing = false;
+                this.startTime = null;
+                this.text = text || null;
+                this.seconds = this.minutes = this.hours = 0;
             }
         }
-	</script>
+    </script>
 
 </body>
 </html>
