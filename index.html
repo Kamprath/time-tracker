@@ -133,7 +133,7 @@
                        @keyup.enter="saveEdit"
                        @keyup.esc="toggleEdit"
                        autofocus
-                       placeholder="Enter a task name">
+                       placeholder="Enter a task">
             </div>
             <div class="col has-text-right">
                 <p v-if="!editing">
@@ -226,7 +226,7 @@
                 },
 
                 startTimer() {
-                    this.interval = window.setInterval(this.increment, 1000);
+                    this.interval = window.setInterval(this.sync, 1000);
                 },
 
                 stop() {
@@ -236,20 +236,6 @@
                     this.interval = null;
                     this.active = false;
                     this.update();
-                },
-
-                increment() {
-                    this.seconds++;
-
-                    if (this.seconds >= 60) {
-                        this.seconds = 0;
-                        this.minutes++;
-                    }
-
-                    if (this.minutes >= 60) {
-                        this.minutes = 0;
-                        this.hours++;
-                    }
                 },
 
                 format(value) {
@@ -343,8 +329,6 @@
                 },
 
                 sync() {
-                    if (!this.active || !this.start.time) return;
-
                     const duration = moment.duration(
                         (moment()).diff(this.start.time)
                     );
@@ -365,11 +349,8 @@
             },
 
             created() {
-                window.addEventListener('focus', () => this.sync());
-
-                this.sync();
-
                 if (this.active) {
+                    this.sync();
                     this.startTimer();
                 }
             }
