@@ -158,7 +158,6 @@
                 this.editing = false;
                 this.text = text || null;
                 this.seconds = this.minutes = this.hours = 0;
-                this.startHours = this.startMinutes = this.startSeconds = 0;
                 this.start = {
                     time: null,
                     hours: 0,
@@ -329,13 +328,17 @@
                 },
 
                 sync() {
-                    const duration = moment.duration(
+                    let duration = moment.duration(
                         (moment()).diff(this.start.time)
                     );
 
-                    this.hours = duration.add(this.start.hours, 'hours').hours();
-                    this.minutes = duration.add(this.start.minutes, 'minutes').minutes();
-                    this.seconds = duration.add(this.start.seconds, 'seconds').seconds();
+                    duration.add(this.start.hours, 'hours')
+                        .add(this.start.minutes, 'minutes')
+                        .add(this.start.seconds, 'seconds');
+
+                    this.hours = duration.hours();
+                    this.minutes = duration.minutes();
+                    this.seconds = duration.seconds();
                 }
             },
 
