@@ -239,7 +239,8 @@
                 },
 
                 format(value) {
-                    return ('0' + value).slice(-2);
+                    let digits = value > 99 ? 3 : 2;
+                    return ('0' + value).slice(-digits);
                 },
 
                 remove(confirm = true) {
@@ -303,7 +304,7 @@
                 },
 
                 filterHours(e) {
-                    this.edit.hours = this.filterTimeInput(e, 99);
+                    this.edit.hours = this.filterTimeInput(e, 999);
                 },
 
                 filterMinutes(e) {
@@ -337,7 +338,7 @@
                         .add(this.start.minutes, 'minutes')
                         .add(this.start.seconds, 'seconds');
 
-                    this.hours = duration.hours();
+                    this.hours = (duration.days() * 24) + duration.hours();
                     this.minutes = duration.minutes();
                     this.seconds = duration.seconds();
                 }
