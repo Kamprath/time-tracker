@@ -16,8 +16,8 @@
 </template>
 
 <script>
-    import Timer from './Timer';
-    import TimerComponent from './components/Timer';
+    import TimerContract from './Timer';
+    import Timer from './components/Timer';
 
     // load CSS libraries via Webpack
     import bulma from 'bulma';
@@ -26,9 +26,7 @@
     export default {
         name: 'App',
 
-        components: {
-            timer: TimerComponent
-        },
+        components: { Timer },
 
         data() {
             return {
@@ -37,35 +35,55 @@
         },
 
         methods: {
+            /**
+             * Add a new timer instance
+             */
             addTimer() {
-                const timer = new Timer();
-                timer.editing = true;
-                timer.new = true;
-                this.timers.push(timer);
+                this.timers.push(new TimerContract(true));
                 this.save();
             },
 
+            /**
+             * Save data to localStorage
+             */
             save() {
                 window.localStorage.timers = JSON.stringify(this.timers);
             },
 
+            /**
+             * Update saved timer data
+             * @param {number} index        Array index of object to update in localStorage
+             * @param {TimerContract} timer The instance to save
+             */
             updateTimer(index, timer) {
                 this.timers[index] = timer;
                 this.save();
             },
 
+            /**
+             * Remove a timer
+             * @param {number} index    Array index of object to update in localStorage
+             */
             removeTimer(index) {
                 this.timers.splice(index, 1);
                 this.save();
+            },
+
+            /**
+             * Focus last element with a [autofocus] attribute
+             */
+            autofocus() {
+                const elements = document.querySelectorAll('[autofocus]');
+
+                if (!elements.length) return;
+
+                elements[elements.length - 1].focus();
             }
         },
 
         updated() {
-            const elements = document.querySelectorAll('[autofocus]');
-
-            if (!elements.length) return;
-
-            elements[elements.length - 1].focus();
+            // autofocus last input because document does not re-render
+            this.autofocus();
         }
     }
 </script>
