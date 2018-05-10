@@ -18,7 +18,8 @@ class Favicon {
     add(path) {
         const newLink = document.createElement('link');
 
-        newLink.rel = 'icon';
+        newLink.rel = 'shortcut icon';
+        newLink.type = 'image/x-icon';
         newLink.href = path;
 
         document.head.appendChild(newLink);

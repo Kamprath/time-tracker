@@ -97,6 +97,10 @@
             }
         },
 
+        created() {
+            this.updateFavicon();
+        },
+
         updated() {
             // autofocus last input because document does not re-render
             this.autofocus();
