@@ -4,7 +4,7 @@
 
 Use it here: [https://timer.johnny.website](https://timer.johnny.website)
 
-![Screenshot](https://files.johnny.website/timer.johnny.website.png)
+![Screenshot](https://files.johnny.website/timer_screenshot.png)
 
 ### Offline access
 Data is stored locally by your browser so you can access your timers offline.
