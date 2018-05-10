@@ -18,6 +18,7 @@
 <script>
     import TimerContract from './Timer';
     import Timer from './components/Timer';
+    import favicon from './favicon';
 
     // load CSS libraries via Webpack
     import bulma from 'bulma';
@@ -58,6 +59,7 @@
             updateTimer(index, timer) {
                 this.timers[index] = timer;
                 this.save();
+                this.updateFavicon();
             },
 
             /**
@@ -78,6 +80,20 @@
                 if (!elements.length) return;
 
                 elements[elements.length - 1].focus();
+            },
+
+            /**
+             * Update favicon to indicate timer status
+             */
+            updateFavicon() {
+                for (let i = 0; i < this.timers.length; i++) {
+                    if (this.timers[i].active) {
+                        return favicon('/static/favicon-play.ico');
+                    }
+                }
+
+                favicon('/static/favicon.ico');
+
             }
         },
 
